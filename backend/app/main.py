@@ -1,10 +1,17 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
 from app.spotify_client import (
     get_auth_url,
     get_access_token,
     get_liked_tracks,
     save_raw_json
+)
+
+from app.swipe_service import (
+    get_top_recommendations,
+    handle_swipe,
+    get_next_track
 )
 
 app = FastAPI()
@@ -37,3 +44,23 @@ def callback(code: str):
         "message": "Stage 1 complete",
         "tracks_pulled": len(liked_tracks)
     }
+    
+class SwipeRequest(BaseModel):
+    track_id: str
+    liked: bool
+
+
+@app.get("/next-track")
+def next_track():
+    return get_next_track()
+
+
+@app.post("/swipe")
+def swipe_track(request: SwipeRequest):
+    handle_swipe(request.track_id, request.liked)
+    return {"message": "Swipe recorded"}
+
+
+@app.get("/recommend")
+def recommend(k: int = 5):
+    return get_top_recommendations(k)
