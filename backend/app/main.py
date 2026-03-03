@@ -1,0 +1,39 @@
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from app.spotify_client import (
+    get_auth_url,
+    get_access_token,
+    get_liked_tracks,
+    save_raw_json
+)
+
+app = FastAPI()
+
+
+@app.get("/")
+def home():
+    return {"message": "MelodicMatch Backend Running"}
+
+
+@app.get("/login")
+def login():
+    return RedirectResponse(get_auth_url())
+
+
+@app.get("/callback")
+def callback(code: str):
+    token_data = get_access_token(code)
+
+    if "access_token" not in token_data:
+        return {"error": token_data}
+
+    access_token = token_data["access_token"]
+
+    liked_tracks = get_liked_tracks(access_token)
+
+    save_raw_json(liked_tracks, "liked_tracks.json")
+
+    return {
+        "message": "Stage 1 complete",
+        "tracks_pulled": len(liked_tracks)
+    }
