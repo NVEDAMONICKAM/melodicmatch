@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 from app.spotify_client import (
     get_auth_url,
     get_access_token,
@@ -16,6 +17,13 @@ from app.swipe_service import (
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def home():
